@@ -39,7 +39,20 @@ struct FEasyThumbnailGeneratorRenderSettings
     bool bShowBounds = false;
     bool bShowCheckerboard = false;
     bool bUsePreviewSceneSettings = false;
-    TEnumAsByte<EAntiAliasingMethod> AntiAliasingMode = EAntiAliasingMethod::AAM_TSR;
+    bool bCaptureAntiAliasing = true;
+    bool bCaptureTemporalAA = true;
+    bool bCaptureEveryFrame = true;
+    bool bCaptureOnMovement = true;
+    bool bCaptureBloom = false;
+    bool bCaptureVignette = false;
+    bool bCaptureEyeAdaptation = false;
+    bool bCapturePostProcessing = true;
+    bool bCaptureTonemapper = true;
+    bool bCaptureLighting = true;
+    bool bCaptureReflections = true;
+    bool bCaptureDeferredLighting = true;
+    bool bCaptureMaterials = true;
+    bool bCaptureDepthOfField = false;
     EEasyThumbnailGeneratorProjectionMode ProjectionMode = EEasyThumbnailGeneratorProjectionMode::Perspective;
     float CameraYaw = -90.0f;
     float CameraPitch = 0.0f;
@@ -92,8 +105,47 @@ public:
     UPROPERTY(EditAnywhere, Category="Preview", meta=(DisplayName="Use Preview Scene Settings", ToolTip="When enabled, the Preview Scene panel (environment, floor, grid, post process) drives the live preview instead of the plugin's own lighting/post-process settings."))
     bool bUsePreviewSceneSettings;
 
-    UPROPERTY(EditAnywhere, Category="Preview", meta=(DisplayName="Anti-Aliasing"))
-    TEnumAsByte<EAntiAliasingMethod> AntiAliasingMode;
+    UPROPERTY(EditAnywhere, Category="Capture", meta=(DisplayName="Anti-Aliasing"))
+    bool bCaptureAntiAliasing;
+
+    UPROPERTY(EditAnywhere, Category="Capture", meta=(DisplayName="Temporal AA (instead FXAA)"))
+    bool bCaptureTemporalAA;
+
+    UPROPERTY(EditAnywhere, Category="Capture", meta=(DisplayName="Capture Every Frame"))
+    bool bCaptureEveryFrame;
+
+    UPROPERTY(EditAnywhere, Category="Capture", meta=(DisplayName="Capture On Movement"))
+    bool bCaptureOnMovement;
+
+    UPROPERTY(EditAnywhere, Category="Capture")
+    bool bCaptureBloom;
+
+    UPROPERTY(EditAnywhere, Category="Capture")
+    bool bCaptureVignette;
+
+    UPROPERTY(EditAnywhere, Category="Capture")
+    bool bCaptureEyeAdaptation;
+
+    UPROPERTY(EditAnywhere, Category="Capture")
+    bool bCapturePostProcessing;
+
+    UPROPERTY(EditAnywhere, Category="Capture")
+    bool bCaptureTonemapper;
+
+    UPROPERTY(EditAnywhere, Category="Capture")
+    bool bCaptureLighting;
+
+    UPROPERTY(EditAnywhere, Category="Capture")
+    bool bCaptureReflections;
+
+    UPROPERTY(EditAnywhere, Category="Capture")
+    bool bCaptureDeferredLighting;
+
+    UPROPERTY(EditAnywhere, Category="Capture")
+    bool bCaptureMaterials;
+
+    UPROPERTY(EditAnywhere, Category="Capture")
+    bool bCaptureDepthOfField;
 
     UPROPERTY(EditAnywhere, Category="Camera")
     EEasyThumbnailGeneratorProjectionMode ProjectionMode;

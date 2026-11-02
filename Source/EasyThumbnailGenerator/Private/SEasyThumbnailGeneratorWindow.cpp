@@ -466,15 +466,9 @@ void FEasyThumbnailGeneratorViewportClient::SyncViewToSettings(bool bRefitCamera
         return;
     }
 
+    // Use a square framing aspect so the live preview matches the square PNG output,
+    // regardless of the (possibly rectangular) viewport widget size.
     float ViewportAspectRatio = 1.0f;
-    if (const TSharedPtr<SEditorViewport> PinnedViewport = ViewportWidget.Pin())
-    {
-        const FVector2D ViewportSize = PinnedViewport->GetCachedGeometry().GetLocalSize();
-        if (ViewportSize.X > 1.0f && ViewportSize.Y > 1.0f)
-        {
-            ViewportAspectRatio = ViewportSize.X / ViewportSize.Y;
-        }
-    }
 
     const float PaddingMultiplier =
         1.0f + (FMath::Max(CurrentSettings.FramePaddingPercent, 0.0f) * 0.01f);

@@ -36,7 +36,20 @@ struct FEasyThumbnailGeneratorSavedPreset
     bool bUsePreviewSceneSettings = false;
 
     UPROPERTY()
-    TEnumAsByte<EAntiAliasingMethod> AntiAliasingMode = EAntiAliasingMethod::AAM_TSR;
+    bool bCaptureAntiAliasing = true;
+    bool bCaptureTemporalAA = true;
+    bool bCaptureEveryFrame = true;
+    bool bCaptureOnMovement = true;
+    bool bCaptureBloom = false;
+    bool bCaptureVignette = false;
+    bool bCaptureEyeAdaptation = false;
+    bool bCapturePostProcessing = true;
+    bool bCaptureTonemapper = true;
+    bool bCaptureLighting = true;
+    bool bCaptureReflections = true;
+    bool bCaptureDeferredLighting = true;
+    bool bCaptureMaterials = true;
+    bool bCaptureDepthOfField = false;
 
     UPROPERTY()
     EEasyThumbnailGeneratorProjectionMode ProjectionMode = EEasyThumbnailGeneratorProjectionMode::Perspective;

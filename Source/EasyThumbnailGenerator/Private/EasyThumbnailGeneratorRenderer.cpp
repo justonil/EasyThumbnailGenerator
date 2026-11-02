@@ -300,8 +300,9 @@ bool FEasyThumbnailGeneratorRenderer::RenderAsset(
     CoverageTarget->UpdateResourceImmediate(true);
 
     USceneCaptureComponent2D* CaptureComponent = NewObject<USceneCaptureComponent2D>(GetTransientPackage());
-    CaptureComponent->bCaptureEveryFrame = false;
-    CaptureComponent->bCaptureOnMovement = false;
+    CaptureComponent->bCaptureEveryFrame = Settings.bCaptureEveryFrame;
+    
+    CaptureComponent->bCaptureOnMovement = Settings.bCaptureOnMovement;
     // Manual exposure/pre-exposure needs a persistent view state when captures are
     // triggered on demand. Without it, each Generate Current starts from a fresh
     // SceneCapture view state and the Fixed EV100 value can be ignored in the LDR pass.
@@ -322,28 +323,24 @@ bool FEasyThumbnailGeneratorRenderer::RenderAsset(
         CaptureComponent->FOVAngle = Settings.PerspectiveFOV;
         CaptureComponent->bAutoCalculateOrthoPlanes = false;
     }
-
     CaptureComponent->ShowFlags.SetAtmosphere(false);
     CaptureComponent->ShowFlags.SetFog(false);
     CaptureComponent->ShowFlags.SetGrid(false);
     CaptureComponent->ShowFlags.SetSelectionOutline(false);
     CaptureComponent->ShowFlags.SetEditor(false);
     CaptureComponent->ShowFlags.SetCompositeEditorPrimitives(false);
-    CaptureComponent->ShowFlags.SetTemporalAA(Settings.AntiAliasingMode == EAntiAliasingMethod::AAM_TemporalAA || Settings.AntiAliasingMode == EAntiAliasingMethod::AAM_TSR);
-    CaptureComponent->ShowFlags.SetAntiAliasing(Settings.AntiAliasingMode != EAntiAliasingMethod::AAM_None);
-    // Anti-aliasing method selection is driven by the show flags below; per-capture
-    // override of the project AA method is not exposed on SceneCaptureComponent2D.
-    (void)Settings;
-    CaptureComponent->ShowFlags.SetMaterials(true);
-    CaptureComponent->ShowFlags.SetLighting(true);
-    CaptureComponent->ShowFlags.SetPostProcessing(true);
-    CaptureComponent->ShowFlags.SetTonemapper(true);
-    CaptureComponent->ShowFlags.SetDeferredLighting(true);
-    CaptureComponent->ShowFlags.SetReflectionEnvironment(true);
-    CaptureComponent->ShowFlags.SetDepthOfField(false);
-    CaptureComponent->ShowFlags.SetBloom(false);
-    CaptureComponent->ShowFlags.SetVignette(false);
-    CaptureComponent->ShowFlags.SetEyeAdaptation(false);
+    CaptureComponent->ShowFlags.SetTemporalAA(true);
+    CaptureComponent->ShowFlags.SetAntiAliasing(true);
+    CaptureComponent->ShowFlags.SetMaterials(Settings.bCaptureMaterials);
+    CaptureComponent->ShowFlags.SetLighting(Settings.bCaptureLighting);
+    CaptureComponent->ShowFlags.SetPostProcessing(Settings.bCapturePostProcessing);
+    CaptureComponent->ShowFlags.SetTonemapper(Settings.bCaptureTonemapper);
+    CaptureComponent->ShowFlags.SetDeferredLighting(Settings.bCaptureDeferredLighting);
+    CaptureComponent->ShowFlags.SetReflectionEnvironment(Settings.bCaptureReflections);
+    CaptureComponent->ShowFlags.SetDepthOfField(Settings.bCaptureDepthOfField);
+    CaptureComponent->ShowFlags.SetBloom(Settings.bCaptureBloom);
+    CaptureComponent->ShowFlags.SetVignette(Settings.bCaptureVignette);
+    CaptureComponent->ShowFlags.SetEyeAdaptation(Settings.bCaptureEyeAdaptation);
 
     if (RenderProfile)
     {
