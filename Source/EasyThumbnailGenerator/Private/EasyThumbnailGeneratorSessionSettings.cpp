@@ -78,6 +78,8 @@ void UEasyThumbnailGeneratorSessionSettings::ApplyRenderSettings(
     FrameOffset = Settings.FrameOffset;
     bShowBounds = Settings.bShowBounds;
     bShowCheckerboard = Settings.bShowCheckerboard;
+    bUsePreviewSceneSettings = Settings.bUsePreviewSceneSettings;
+    AntiAliasingMode = Settings.AntiAliasingMode;
     ProjectionMode = Settings.ProjectionMode;
     CameraYaw = Settings.CameraYaw;
     CameraPitch = Settings.CameraPitch;
@@ -99,6 +101,8 @@ FEasyThumbnailGeneratorRenderSettings UEasyThumbnailGeneratorSessionSettings::Ma
     Settings.FrameOffset = FrameOffset;
     Settings.bShowBounds = bShowBounds;
     Settings.bShowCheckerboard = bShowCheckerboard;
+    Settings.bUsePreviewSceneSettings = bUsePreviewSceneSettings;
+    Settings.AntiAliasingMode = AntiAliasingMode;
     Settings.ProjectionMode = ProjectionMode;
     Settings.CameraYaw = CameraYaw;
     Settings.CameraPitch = CameraPitch;

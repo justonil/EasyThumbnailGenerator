@@ -24,7 +24,8 @@ public class EasyThumbnailGenerator : ModuleRules
             "Slate",
             "SlateCore",
             "ToolMenus",
-            "UnrealEd"
+            "UnrealEd",
+            "AdvancedPreviewScene"
         });
     }
 }

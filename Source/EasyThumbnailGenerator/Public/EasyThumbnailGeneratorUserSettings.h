@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "SceneUtils.h"
 #include "EasyThumbnailGeneratorSessionSettings.h"
 #include "UObject/Object.h"
 #include "EasyThumbnailGeneratorUserSettings.generated.h"
@@ -30,6 +31,12 @@ struct FEasyThumbnailGeneratorSavedPreset
 
     UPROPERTY()
     bool bShowCheckerboard = false;
+
+    UPROPERTY()
+    bool bUsePreviewSceneSettings = false;
+
+    UPROPERTY()
+    TEnumAsByte<EAntiAliasingMethod> AntiAliasingMode = EAntiAliasingMethod::AAM_TSR;
 
     UPROPERTY()
     EEasyThumbnailGeneratorProjectionMode ProjectionMode = EEasyThumbnailGeneratorProjectionMode::Perspective;

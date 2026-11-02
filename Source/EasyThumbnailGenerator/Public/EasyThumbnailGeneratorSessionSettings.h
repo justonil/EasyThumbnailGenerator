@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "SceneUtils.h"
 #include "UObject/Object.h"
 #include "EasyThumbnailGeneratorSessionSettings.generated.h"
 
@@ -37,6 +38,8 @@ struct FEasyThumbnailGeneratorRenderSettings
     FVector FrameOffset = FVector::ZeroVector;
     bool bShowBounds = false;
     bool bShowCheckerboard = false;
+    bool bUsePreviewSceneSettings = false;
+    TEnumAsByte<EAntiAliasingMethod> AntiAliasingMode = EAntiAliasingMethod::AAM_TSR;
     EEasyThumbnailGeneratorProjectionMode ProjectionMode = EEasyThumbnailGeneratorProjectionMode::Perspective;
     float CameraYaw = -90.0f;
     float CameraPitch = 0.0f;
@@ -86,6 +89,12 @@ public:
     UPROPERTY(EditAnywhere, Category="Preview", meta=(DisplayName="Checkerboard Background", ToolTip="Show Unreal Editor's alpha checkerboard behind the live preview. This does not affect the exported PNG."))
     bool bShowCheckerboard;
 
+    UPROPERTY(EditAnywhere, Category="Preview", meta=(DisplayName="Use Preview Scene Settings", ToolTip="When enabled, the Preview Scene panel (environment, floor, grid, post process) drives the live preview instead of the plugin's own lighting/post-process settings."))
+    bool bUsePreviewSceneSettings;
+
+    UPROPERTY(EditAnywhere, Category="Preview", meta=(DisplayName="Anti-Aliasing"))
+    TEnumAsByte<EAntiAliasingMethod> AntiAliasingMode;
+
     UPROPERTY(EditAnywhere, Category="Camera")
     EEasyThumbnailGeneratorProjectionMode ProjectionMode;
 
@@ -98,22 +107,22 @@ public:
     UPROPERTY(EditAnywhere, Category="Camera", meta=(ClampMin="5.0", ClampMax="120.0", UIMin="5.0", UIMax="120.0", EditCondition="ProjectionMode == EEasyThumbnailGeneratorProjectionMode::Perspective", EditConditionHides))
     float PerspectiveFOV;
 
-    UPROPERTY(EditAnywhere, Category="Lighting", meta=(ClampMin="0.0", ClampMax="50.0", UIMin="0.0", UIMax="50.0"))
+    UPROPERTY(EditAnywhere, Category="Lighting", meta=(EditCondition="!bUsePreviewSceneSettings", ClampMin="0.0", ClampMax="50.0", UIMin="0.0", UIMax="50.0"))
     float DirectionalLightIntensity;
 
-    UPROPERTY(EditAnywhere, Category="Lighting", meta=(ClampMin="-180.0", ClampMax="180.0", UIMin="-180.0", UIMax="180.0"))
+    UPROPERTY(EditAnywhere, Category="Lighting", meta=(EditCondition="!bUsePreviewSceneSettings", ClampMin="-180.0", ClampMax="180.0", UIMin="-180.0", UIMax="180.0"))
     float DirectionalLightYaw;
 
-    UPROPERTY(EditAnywhere, Category="Lighting", meta=(ClampMin="-89.0", ClampMax="89.0", UIMin="-89.0", UIMax="89.0"))
+    UPROPERTY(EditAnywhere, Category="Lighting", meta=(EditCondition="!bUsePreviewSceneSettings", ClampMin="-89.0", ClampMax="89.0", UIMin="-89.0", UIMax="89.0"))
     float DirectionalLightPitch;
 
-    UPROPERTY(EditAnywhere, Category="Lighting", meta=(ClampMin="0.0", ClampMax="10.0", UIMin="0.0", UIMax="10.0"))
+    UPROPERTY(EditAnywhere, Category="Lighting", meta=(EditCondition="!bUsePreviewSceneSettings", ClampMin="0.0", ClampMax="10.0", UIMin="0.0", UIMax="10.0"))
     float SkyLightIntensity;
 
-    UPROPERTY(EditAnywhere, Category="Post Process")
+    UPROPERTY(EditAnywhere, Category="Post Process", meta=(EditCondition="!bUsePreviewSceneSettings"))
     bool bUseManualExposure;
 
-    UPROPERTY(EditAnywhere, Category="Post Process", meta=(DisplayName="Fixed EV100", ClampMin="-6.0", ClampMax="12.0", UIMin="-6.0", UIMax="12.0", EditCondition="bUseManualExposure", EditConditionHides, ToolTip="Fixed EV100 used consistently by the live preview and exported PNG."))
+    UPROPERTY(EditAnywhere, Category="Post Process", meta=(DisplayName="Fixed EV100", ClampMin="-6.0", ClampMax="12.0", UIMin="-6.0", UIMax="12.0", EditCondition="!bUsePreviewSceneSettings && bUseManualExposure", EditConditionHides, ToolTip="Fixed EV100 used consistently by the live preview and exported PNG."))
     float ExposureCompensation;
 
     void ApplyPreset(EEasyThumbnailGeneratorPreset InPreset);

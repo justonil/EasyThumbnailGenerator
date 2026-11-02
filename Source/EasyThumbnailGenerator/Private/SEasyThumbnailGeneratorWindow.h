@@ -9,8 +9,9 @@
 #include "Widgets/Input/SComboBox.h"
 #include "UObject/UnrealType.h"
 
-class FPreviewScene;
+class FAdvancedPreviewScene;
 class IDetailsView;
+class SAdvancedPreviewDetailsTab;
 class SEditableTextBox;
 class UPrimitiveComponent;
 
@@ -52,6 +53,7 @@ public:
 
     void Construct(const FArguments& InArgs);
 
+    TSharedPtr<FAdvancedPreviewScene> GetPreviewScene() const { return PreviewScene; }
     void SetAsset(UObject* InAsset);
     void ApplySettings(const FEasyThumbnailGeneratorRenderSettings& InSettings, bool bRefitCamera);
     void FitCameraToAsset();
@@ -62,7 +64,7 @@ protected:
     void BindCommands() override;
 
 private:
-    TUniquePtr<FPreviewScene> PreviewScene;
+    TSharedPtr<FAdvancedPreviewScene> PreviewScene;
     TSharedPtr<FEasyThumbnailGeneratorViewportClient> ViewportClient;
 };
 
@@ -114,6 +116,7 @@ private:
     TStrongObjectPtr<UEasyThumbnailGeneratorSessionSettings> SessionSettings;
     TSharedPtr<SEasyThumbnailGeneratorViewport> ViewportWidget;
     TSharedPtr<IDetailsView> DetailsView;
+    TSharedPtr<SAdvancedPreviewDetailsTab> PreviewSceneDetailsTab;
 
     TArray<TSharedPtr<FString>> SavedPresetOptions;
     TSharedPtr<FString> SelectedSavedPreset;

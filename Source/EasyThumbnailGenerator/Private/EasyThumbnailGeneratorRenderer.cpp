@@ -19,6 +19,11 @@
 #include "Misc/Paths.h"
 #include "PixelFormat.h"
 #include "PreviewScene.h"
+#include "SceneUtils.h"
+#include "Engine/Scene.h"
+#include "AdvancedPreviewScene.h"
+#include "AssetViewerSettings.h"
+#include "Editor/EditorPerProjectUserSettings.h"
 #include "RenderingThread.h"
 
 #define LOCTEXT_NAMESPACE "EasyThumbnailGeneratorRenderer"
@@ -115,7 +120,8 @@ bool FEasyThumbnailGeneratorRenderer::RenderAsset(
     TArray<FColor>& OutPixels,
     FText& OutError)
 {
-    FPreviewScene PreviewScene(
+    const FPreviewSceneProfile* RenderProfile = nullptr;
+    FAdvancedPreviewScene PreviewScene(
         FPreviewScene::ConstructionValues()
             .SetCreatePhysicsScene(false)
             .ShouldSimulatePhysics(false)
@@ -124,10 +130,23 @@ bool FEasyThumbnailGeneratorRenderer::RenderAsset(
             .SetEditor(true)
             .SetForceMipsResident(true));
 
-    EasyThumbnailGenerator::InitializePreviewSkyLighting(PreviewScene);
-    PreviewScene.SetLightBrightness(Settings.DirectionalLightIntensity);
-    PreviewScene.SetLightDirection(FRotator(Settings.DirectionalLightPitch, Settings.DirectionalLightYaw, 0.0f));
-    EasyThumbnailGenerator::ApplyPreviewSkyLightIntensity(PreviewScene, Settings.SkyLightIntensity);
+    if (Settings.bUsePreviewSceneSettings)
+    {
+        UAssetViewerSettings* AssetViewerSettings = UAssetViewerSettings::Get();
+        UEditorPerProjectUserSettings* PerProjectSettings = GetMutableDefault<UEditorPerProjectUserSettings>();
+        if (AssetViewerSettings && PerProjectSettings && AssetViewerSettings->Profiles.IsValidIndex(PerProjectSettings->AssetViewerProfileIndex))
+        {
+            RenderProfile = &AssetViewerSettings->Profiles[PerProjectSettings->AssetViewerProfileIndex];
+            PreviewScene.SetProfileIndex(PerProjectSettings->AssetViewerProfileIndex);
+        }
+    }
+    else
+    {
+        EasyThumbnailGenerator::InitializePreviewSkyLighting(PreviewScene);
+        PreviewScene.SetLightBrightness(Settings.DirectionalLightIntensity);
+        PreviewScene.SetLightDirection(FRotator(Settings.DirectionalLightPitch, Settings.DirectionalLightYaw, 0.0f));
+        EasyThumbnailGenerator::ApplyPreviewSkyLightIntensity(PreviewScene, Settings.SkyLightIntensity);
+    }
 
     UPrimitiveComponent* MeshComponent = nullptr;
 
@@ -310,8 +329,11 @@ bool FEasyThumbnailGeneratorRenderer::RenderAsset(
     CaptureComponent->ShowFlags.SetSelectionOutline(false);
     CaptureComponent->ShowFlags.SetEditor(false);
     CaptureComponent->ShowFlags.SetCompositeEditorPrimitives(false);
-    CaptureComponent->ShowFlags.SetTemporalAA(true);
-    CaptureComponent->ShowFlags.SetAntiAliasing(true);
+    CaptureComponent->ShowFlags.SetTemporalAA(Settings.AntiAliasingMode == EAntiAliasingMethod::AAM_TemporalAA || Settings.AntiAliasingMode == EAntiAliasingMethod::AAM_TSR);
+    CaptureComponent->ShowFlags.SetAntiAliasing(Settings.AntiAliasingMode != EAntiAliasingMethod::AAM_None);
+    // Anti-aliasing method selection is driven by the show flags below; per-capture
+    // override of the project AA method is not exposed on SceneCaptureComponent2D.
+    (void)Settings;
     CaptureComponent->ShowFlags.SetMaterials(true);
     CaptureComponent->ShowFlags.SetLighting(true);
     CaptureComponent->ShowFlags.SetPostProcessing(true);
@@ -319,8 +341,19 @@ bool FEasyThumbnailGeneratorRenderer::RenderAsset(
     CaptureComponent->ShowFlags.SetDeferredLighting(true);
     CaptureComponent->ShowFlags.SetReflectionEnvironment(true);
     CaptureComponent->ShowFlags.SetDepthOfField(false);
+    CaptureComponent->ShowFlags.SetBloom(false);
+    CaptureComponent->ShowFlags.SetVignette(false);
+    CaptureComponent->ShowFlags.SetEyeAdaptation(false);
 
-    if (Settings.bUseManualExposure)
+    if (RenderProfile)
+    {
+        CaptureComponent->PostProcessSettings = RenderProfile->PostProcessingSettings;
+        CaptureComponent->PostProcessBlendWeight = RenderProfile->bPostProcessingEnabled ? 1.0f : 0.0f;
+        CaptureComponent->ShowFlags.SetPostProcessing(RenderProfile->bPostProcessingEnabled);
+        CaptureComponent->ShowFlags.SetTonemapper(RenderProfile->bEnableToneMapping);
+    }
+
+    if (!Settings.bUsePreviewSceneSettings && Settings.bUseManualExposure)
     {
         CaptureComponent->PostProcessBlendWeight = 1.0f;
         CaptureComponent->PostProcessSettings.bOverride_AutoExposureMethod = true;

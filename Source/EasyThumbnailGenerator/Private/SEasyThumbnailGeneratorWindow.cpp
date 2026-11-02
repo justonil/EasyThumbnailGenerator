@@ -21,6 +21,10 @@
 #include "Misc/MessageDialog.h"
 #include "Modules/ModuleManager.h"
 #include "PreviewScene.h"
+#include "AdvancedPreviewScene.h"
+#include "AssetViewerSettings.h"
+#include "Editor/EditorPerProjectUserSettings.h"
+#include "SAdvancedPreviewDetailsTab.h"
 #include "PropertyEditorModule.h"
 #include "RenderingThread.h"
 #include "UObject/UnrealType.h"
@@ -288,9 +292,21 @@ void FEasyThumbnailGeneratorViewportClient::ApplySettings(
 
     UpdatePreviewTransform();
 
-    PreviewScene.SetLightBrightness(CurrentSettings.DirectionalLightIntensity);
-    PreviewScene.SetLightDirection(FRotator(CurrentSettings.DirectionalLightPitch, CurrentSettings.DirectionalLightYaw, 0.0f));
-    EasyThumbnailGenerator::ApplyPreviewSkyLightIntensity(PreviewScene, CurrentSettings.SkyLightIntensity);
+    if (CurrentSettings.bUsePreviewSceneSettings)
+    {
+        UAssetViewerSettings* AssetViewerSettings = UAssetViewerSettings::Get();
+        UEditorPerProjectUserSettings* PerProjectSettings = GetMutableDefault<UEditorPerProjectUserSettings>();
+        if (AssetViewerSettings && PerProjectSettings && AssetViewerSettings->Profiles.IsValidIndex(PerProjectSettings->AssetViewerProfileIndex))
+        {
+            static_cast<FAdvancedPreviewScene*>(&PreviewScene)->SetProfileIndex(PerProjectSettings->AssetViewerProfileIndex);
+        }
+    }
+    else
+    {
+        PreviewScene.SetLightBrightness(CurrentSettings.DirectionalLightIntensity);
+        PreviewScene.SetLightDirection(FRotator(CurrentSettings.DirectionalLightPitch, CurrentSettings.DirectionalLightYaw, 0.0f));
+        EasyThumbnailGenerator::ApplyPreviewSkyLightIntensity(PreviewScene, CurrentSettings.SkyLightIntensity);
+    }
 
     ExposureSettings.bFixed = CurrentSettings.bUseManualExposure;
     if (CurrentSettings.bUseManualExposure)
@@ -551,7 +567,7 @@ void FEasyThumbnailGeneratorViewportClient::SyncViewToSettings(bool bRefitCamera
 
 void SEasyThumbnailGeneratorViewport::Construct(const FArguments& InArgs)
 {
-    PreviewScene = MakeUnique<FPreviewScene>(
+    PreviewScene = MakeShared<FAdvancedPreviewScene>(
         FPreviewScene::ConstructionValues()
             .SetCreatePhysicsScene(false)
             .ShouldSimulatePhysics(false)
@@ -873,6 +889,79 @@ void SEasyThumbnailGeneratorWindow::Construct(const FArguments& InArgs)
             ]
 
             + SVerticalBox::Slot()
+            .AutoHeight()
+            .Padding(8.0f, 4.0f, 8.0f, 4.0f)
+            [
+                SNew(SHorizontalBox)
+                + SHorizontalBox::Slot()
+                .FillWidth(1.0f)
+                .VAlign(VAlign_Center)
+                [
+                    SNew(STextBlock)
+                    .Text(LOCTEXT("PreviewSceneSettingsTitle", "Preview Scene"))
+                ]
+                + SHorizontalBox::Slot()
+                .AutoWidth()
+                [
+                    SNew(SButton)
+                    .Text(LOCTEXT("DuplicatePreviewProfileButton", "Duplicate Profile"))
+                    .ToolTipText(LOCTEXT("DuplicatePreviewProfileTooltip", "Duplicate the currently selected preview scene profile."))
+                    .Visibility_Lambda([this]()
+                    {
+                        return (SessionSettings.IsValid() && SessionSettings->bUsePreviewSceneSettings)
+                            ? EVisibility::Visible : EVisibility::Collapsed;
+                    })
+                    .OnClicked_Lambda([this]() -> FReply
+                    {
+                        UAssetViewerSettings* Settings = UAssetViewerSettings::Get();
+                        UEditorPerProjectUserSettings* PerProject = GetMutableDefault<UEditorPerProjectUserSettings>();
+                        if (!Settings || !PerProject)
+                        {
+                            return FReply::Handled();
+                        }
+
+                        const int32 CurrentIndex = PerProject->AssetViewerProfileIndex;
+                        if (!Settings->Profiles.IsValidIndex(CurrentIndex))
+                        {
+                            return FReply::Handled();
+                        }
+
+                        FPreviewSceneProfile Copy = Settings->Profiles[CurrentIndex];
+                        Copy.ProfileName = Copy.ProfileName + TEXT("_Copy");
+                        Copy.bIsEngineDefaultProfile = false;
+
+                        const int32 NewIndex = Settings->Profiles.Add(Copy);
+                        PerProject->AssetViewerProfileIndex = NewIndex;
+                        Settings->PostEditChange();
+                        Settings->Save();
+
+                        if (PreviewSceneDetailsTab.IsValid())
+                        {
+                            PreviewSceneDetailsTab->Refresh();
+                        }
+
+                        return FReply::Handled();
+                    })
+                ]
+            ]
+
+            + SVerticalBox::Slot()
+            .AutoHeight()
+            .Padding(8.0f, 0.0f, 8.0f, 8.0f)
+            [
+                SNew(SBorder)
+                .Padding(6.0f)
+                .Visibility_Lambda([this]()
+                {
+                    return (SessionSettings.IsValid() && SessionSettings->bUsePreviewSceneSettings)
+                        ? EVisibility::Visible : EVisibility::Collapsed;
+                })
+                [
+                    SAssignNew(PreviewSceneDetailsTab, SAdvancedPreviewDetailsTab, ViewportWidget->GetPreviewScene().ToSharedRef())
+                ]
+            ]
+
+            + SVerticalBox::Slot()
             .FillHeight(1.0f)
             .Padding(8.0f)
             [
@@ -927,6 +1016,11 @@ void SEasyThumbnailGeneratorWindow::HandleSettingsChanged(const FPropertyChanged
         ChangedPropertyName == GET_MEMBER_NAME_CHECKED(UEasyThumbnailGeneratorSessionSettings, CameraPitch) ||
         ChangedPropertyName == GET_MEMBER_NAME_CHECKED(UEasyThumbnailGeneratorSessionSettings, PerspectiveFOV) ||
         ChangedPropertyName == GET_MEMBER_NAME_CHECKED(UEasyThumbnailGeneratorSessionSettings, FramePaddingPercent);
+
+    if (ChangedPropertyName == GET_MEMBER_NAME_CHECKED(UEasyThumbnailGeneratorSessionSettings, bUsePreviewSceneSettings) && DetailsView.IsValid())
+    {
+        DetailsView->ForceRefresh();
+    }
 
     RefreshViewport(bCameraRelatedChange);
     PersistLastUsedSettings();
