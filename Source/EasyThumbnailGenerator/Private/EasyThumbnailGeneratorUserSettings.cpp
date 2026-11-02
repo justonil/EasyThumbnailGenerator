@@ -3,6 +3,8 @@
 void FEasyThumbnailGeneratorSavedPreset::FromRenderSettings(const FEasyThumbnailGeneratorRenderSettings& Settings)
 {
     OutputResolution = Settings.OutputResolution;
+    GridWidth = Settings.GridWidth;
+    GridHeight = Settings.GridHeight;
     FramePaddingPercent = Settings.FramePaddingPercent;
     FramingMode = Settings.FramingMode;
     FrameOffset = Settings.FrameOffset;
@@ -39,6 +41,8 @@ FEasyThumbnailGeneratorRenderSettings FEasyThumbnailGeneratorSavedPreset::ToRend
 {
     FEasyThumbnailGeneratorRenderSettings Settings;
     Settings.OutputResolution = OutputResolution;
+    Settings.GridWidth = GridWidth;
+    Settings.GridHeight = GridHeight;
     Settings.FramePaddingPercent = FramePaddingPercent;
     Settings.FramingMode = FramingMode;
     Settings.FrameOffset = FrameOffset;

@@ -466,9 +466,9 @@ void FEasyThumbnailGeneratorViewportClient::SyncViewToSettings(bool bRefitCamera
         return;
     }
 
-    // Use a square framing aspect so the live preview matches the square PNG output,
-    // regardless of the (possibly rectangular) viewport widget size.
-    float ViewportAspectRatio = 1.0f;
+    const float GridAspect = static_cast<float>(FMath::Max(1, CurrentSettings.GridWidth)) / static_cast<float>(FMath::Max(1, CurrentSettings.GridHeight));
+    // Use the output grid aspect so the live preview matches the PNG output.
+    float ViewportAspectRatio = GridAspect;
 
     const float PaddingMultiplier =
         1.0f + (FMath::Max(CurrentSettings.FramePaddingPercent, 0.0f) * 0.01f);

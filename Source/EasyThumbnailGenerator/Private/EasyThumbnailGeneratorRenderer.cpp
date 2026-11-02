@@ -77,10 +77,12 @@ bool FEasyThumbnailGeneratorRenderer::GenerateThumbnail(
             FString::Printf(TEXT("%s_%d.png"), *BaseFileName, CollisionIndex++));
     }
 
+    const int32 SaveWidth = FMath::Max(1, Settings.OutputResolution * FMath::Max(1, Settings.GridWidth));
+    const int32 SaveHeight = FMath::Max(1, Settings.OutputResolution * FMath::Max(1, Settings.GridHeight));
     const FImageView ImageView(
         Pixels.GetData(),
-        Settings.OutputResolution,
-        Settings.OutputResolution,
+        SaveWidth,
+        SaveHeight,
         1,
         ERawImageFormat::BGRA8,
         EGammaSpace::sRGB);
@@ -236,7 +238,7 @@ bool FEasyThumbnailGeneratorRenderer::RenderAsset(
                 AssetBounds,
                 Settings,
                 CameraRotation,
-                1.0f,
+                static_cast<float>(FMath::Max(1, Settings.GridWidth)) / static_cast<float>(FMath::Max(1, Settings.GridHeight)),
                 PaddingMultiplier,
                 MinimumCameraDistance,
                 GeometryFit))
@@ -283,12 +285,14 @@ bool FEasyThumbnailGeneratorRenderer::RenderAsset(
 
     UTextureRenderTarget2D* ColorTarget = NewObject<UTextureRenderTarget2D>(GetTransientPackage());
     ColorTarget->ClearColor = FLinearColor::Transparent;
-    ColorTarget->InitCustomFormat(Settings.OutputResolution, Settings.OutputResolution, PF_FloatRGBA, true);
+    const int32 OutputWidth = FMath::Max(1, Settings.OutputResolution * FMath::Max(1, Settings.GridWidth));
+    const int32 OutputHeight = FMath::Max(1, Settings.OutputResolution * FMath::Max(1, Settings.GridHeight));
+    ColorTarget->InitCustomFormat(OutputWidth, OutputHeight, PF_FloatRGBA, true);
     ColorTarget->UpdateResourceImmediate(true);
 
     UTextureRenderTarget2D* MaskTarget = NewObject<UTextureRenderTarget2D>(GetTransientPackage());
     MaskTarget->ClearColor = FLinearColor::Transparent;
-    MaskTarget->InitCustomFormat(Settings.OutputResolution, Settings.OutputResolution, PF_FloatRGBA, true);
+    MaskTarget->InitCustomFormat(OutputWidth, OutputHeight, PF_FloatRGBA, true);
     MaskTarget->UpdateResourceImmediate(true);
 
     // Separate fallback coverage target. The regular SceneColor alpha path preserves
@@ -296,7 +300,7 @@ bool FEasyThumbnailGeneratorRenderer::RenderAsset(
     // additive geometry from disappearing completely from the exported PNG alpha.
     UTextureRenderTarget2D* CoverageTarget = NewObject<UTextureRenderTarget2D>(GetTransientPackage());
     CoverageTarget->ClearColor = FLinearColor::Transparent;
-    CoverageTarget->InitCustomFormat(Settings.OutputResolution, Settings.OutputResolution, PF_FloatRGBA, true);
+    CoverageTarget->InitCustomFormat(OutputWidth, OutputHeight, PF_FloatRGBA, true);
     CoverageTarget->UpdateResourceImmediate(true);
 
     USceneCaptureComponent2D* CaptureComponent = NewObject<USceneCaptureComponent2D>(GetTransientPackage());
@@ -438,7 +442,7 @@ bool FEasyThumbnailGeneratorRenderer::RenderAsset(
     const TArrayView64<const FLinearColor> ColorPixels = ColorImage.AsRGBA32F();
     const TArrayView64<const FLinearColor> MaskPixels = MaskImage.AsRGBA32F();
     const TArrayView64<const FLinearColor> CoveragePixels = CoverageImage.AsRGBA32F();
-    const int64 ExpectedPixelCount = static_cast<int64>(Settings.OutputResolution) * static_cast<int64>(Settings.OutputResolution);
+    const int64 ExpectedPixelCount = static_cast<int64>(OutputWidth) * static_cast<int64>(OutputHeight);
 
     if (ColorPixels.Num() != ExpectedPixelCount || MaskPixels.Num() != ExpectedPixelCount || CoveragePixels.Num() != ExpectedPixelCount)
     {

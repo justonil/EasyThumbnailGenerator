@@ -33,6 +33,8 @@ enum class EEasyThumbnailGeneratorPreset : uint8
 struct FEasyThumbnailGeneratorRenderSettings
 {
     int32 OutputResolution = 1024;
+    int32 GridWidth = 1;
+    int32 GridHeight = 1;
     float FramePaddingPercent = 5.0f;
     EEasyThumbnailGeneratorFramingMode FramingMode = EEasyThumbnailGeneratorFramingMode::VisibleContent;
     FVector FrameOffset = FVector::ZeroVector;
@@ -86,6 +88,12 @@ public:
 
     UPROPERTY(EditAnywhere, Category="Output", meta=(ClampMin="64", ClampMax="4096", UIMin="64", UIMax="4096"))
     int32 OutputResolution;
+
+    UPROPERTY(EditAnywhere, Category="Output", meta=(ClampMin="1", ClampMax="16", UIMin="1", UIMax="16"))
+    int32 GridWidth;
+
+    UPROPERTY(EditAnywhere, Category="Output", meta=(ClampMin="1", ClampMax="16", UIMin="1", UIMax="16"))
+    int32 GridHeight;
 
     UPROPERTY(EditAnywhere, Category="Output", meta=(ClampMin="0.0", ClampMax="50.0", UIMin="0.0", UIMax="50.0"))
     float FramePaddingPercent;

@@ -18,6 +18,12 @@ struct FEasyThumbnailGeneratorSavedPreset
     int32 OutputResolution = 1024;
 
     UPROPERTY()
+    int32 GridWidth = 1;
+
+    UPROPERTY()
+    int32 GridHeight = 1;
+
+    UPROPERTY()
     float FramePaddingPercent = 5.0f;
 
     UPROPERTY()
