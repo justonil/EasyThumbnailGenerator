@@ -283,7 +283,7 @@ bool FEasyThumbnailGeneratorRenderer::RenderAsset(
 
     UTextureRenderTarget2D* ColorTarget = NewObject<UTextureRenderTarget2D>(GetTransientPackage());
     ColorTarget->ClearColor = FLinearColor::Transparent;
-    ColorTarget->InitCustomFormat(Settings.OutputResolution, Settings.OutputResolution, PF_B8G8R8A8, false);
+    ColorTarget->InitCustomFormat(Settings.OutputResolution, Settings.OutputResolution, PF_FloatRGBA, true);
     ColorTarget->UpdateResourceImmediate(true);
 
     UTextureRenderTarget2D* MaskTarget = NewObject<UTextureRenderTarget2D>(GetTransientPackage());
@@ -387,7 +387,7 @@ bool FEasyThumbnailGeneratorRenderer::RenderAsset(
     FlushRenderingCommands();
 
     CaptureComponent->TextureTarget = ColorTarget;
-    CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
+    CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_FinalToneCurveHDR;
 
     // Prime the persistent capture view state first. UE's pre-exposure uses view
     // history, so the first on-demand capture can still carry the default exposure.
@@ -434,11 +434,11 @@ bool FEasyThumbnailGeneratorRenderer::RenderAsset(
         return false;
     }
 
-    ColorImage.ChangeFormat(ERawImageFormat::BGRA8, EGammaSpace::sRGB);
+    ColorImage.ChangeFormat(ERawImageFormat::RGBA32F, EGammaSpace::Linear);
     MaskImage.ChangeFormat(ERawImageFormat::RGBA32F, EGammaSpace::Linear);
     CoverageImage.ChangeFormat(ERawImageFormat::RGBA32F, EGammaSpace::Linear);
 
-    const TArrayView64<const FColor> ColorPixels = ColorImage.AsBGRA8();
+    const TArrayView64<const FLinearColor> ColorPixels = ColorImage.AsRGBA32F();
     const TArrayView64<const FLinearColor> MaskPixels = MaskImage.AsRGBA32F();
     const TArrayView64<const FLinearColor> CoveragePixels = CoverageImage.AsRGBA32F();
     const int64 ExpectedPixelCount = static_cast<int64>(Settings.OutputResolution) * static_cast<int64>(Settings.OutputResolution);
@@ -456,7 +456,7 @@ bool FEasyThumbnailGeneratorRenderer::RenderAsset(
         const float MaterialOpacity = FMath::Clamp(1.0f - MaskPixels[PixelIndex].A, 0.0f, 1.0f);
         const float CoverageOpacity = FMath::Clamp(1.0f - CoveragePixels[PixelIndex].A, 0.0f, 1.0f);
         const float Opacity = MaterialOpacity > KINDA_SMALL_NUMBER ? MaterialOpacity : CoverageOpacity;
-        FColor Pixel = ColorPixels[PixelIndex];
+        FColor Pixel = ColorPixels[PixelIndex].ToFColorSRGB();
 
         if (Opacity <= KINDA_SMALL_NUMBER)
         {
